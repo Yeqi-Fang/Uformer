@@ -53,14 +53,23 @@ def batch_PSNR(img1, img2, average=True):
     return sum(PSNR)/len(PSNR) if average else sum(PSNR)
 
 def mySSIM(tar_img, prd_img):
-    """Calculate SSIM for PyTorch tensors using scikit-image"""
+    """Calculate SSIM for PyTorch tensors using scikit-image with min-max scaling"""
     # Convert tensors to numpy arrays
     tar_img_np = tar_img.detach().cpu().numpy().transpose(1, 2, 0)
     prd_img_np = prd_img.detach().cpu().numpy().transpose(1, 2, 0)
     
-    # Ensure the values are in [0, 1]
-    tar_img_np = np.clip(tar_img_np, 0, 1)
-    prd_img_np = np.clip(prd_img_np, 0, 1)
+    # Apply min-max scaling to ensure values are in [0, 1]
+    # For target image
+    tar_min = tar_img_np.min()
+    tar_max = tar_img_np.max()
+    if tar_min != tar_max:  # Avoid division by zero
+        tar_img_np = (tar_img_np - tar_min) / (tar_max - tar_min)
+    
+    # For predicted image
+    prd_min = prd_img_np.min()
+    prd_max = prd_img_np.max()
+    if prd_min != prd_max:  # Avoid division by zero
+        prd_img_np = (prd_img_np - prd_min) / (prd_max - prd_min)
     
     # Calculate SSIM
     return ssim(tar_img_np, prd_img_np, channel_axis=2, data_range=1.0)

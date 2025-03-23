@@ -154,10 +154,10 @@ with torch.no_grad():
         with torch.cuda.amp.autocast():
             restored = model_restoration(input_)
             restored = torch.clamp(restored,0,1)  
-        psnr_dataset.append(utils.batch_PSNR(input_, target, False).item())
-        psnr_model_init.append(utils.batch_PSNR(restored, target, False).item())        
-        ssim_dataset.append(utils.batch_SSIM(input_, target, False).item())  # Added for SSIM
-        ssim_model_init.append(utils.batch_SSIM(restored, target, False).item())  # Added for SSIM
+        psnr_dataset.append(utils.batch_PSNR(input_, target, True).item())
+        psnr_model_init.append(utils.batch_PSNR(restored, target, True).item())        
+        ssim_dataset.append(utils.batch_SSIM(input_, target, True).item())  # Added for SSIM
+        ssim_model_init.append(utils.batch_SSIM(restored, target, True).item())  # Added for SSIM
 
     psnr_dataset = sum(psnr_dataset)/len_testset
     psnr_model_init = sum(psnr_model_init)/len_testset
@@ -212,8 +212,8 @@ for epoch in range(start_epoch, opt.nepoch + 1):
                     with torch.cuda.amp.autocast():
                         restored = model_restoration(input_)
                     restored = torch.clamp(restored,0,1)  
-                    psnr_val_rgb.append(utils.batch_PSNR(restored, target, False).item())
-                    ssim_val_rgb.append(utils.batch_SSIM(restored, target, False).item())  # Added for SSIM
+                    psnr_val_rgb.append(utils.batch_PSNR(restored, target, True).item())
+                    ssim_val_rgb.append(utils.batch_SSIM(restored, target, True).item())  # Added for SSIM
 
                 psnr_val_rgb = sum(psnr_val_rgb)/len_testset
                 ssim_val_rgb = sum(ssim_val_rgb)/len_testset  # Added for SSIM
