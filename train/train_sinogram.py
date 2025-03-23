@@ -15,7 +15,7 @@ opt = options.Options().init(argparse.ArgumentParser(description='Image denoisin
 print(opt)
 
 import utils
-from dataset.dataset_denoise import *
+from dataset.dataset_sinogram import *
 ######### Set GPUs ###########
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu
@@ -126,13 +126,13 @@ criterion = CharbonnierLoss().cuda()
 ######### DataLoader ###########
 print('===> Loading datasets')
 img_options_train = {'patch_size':opt.train_ps}
-train_dataset = get_training_data(opt.train_dir, img_options_train)
+train_dataset = get_training_data(opt.root_dir)
 train_loader = DataLoader(dataset=train_dataset, batch_size=opt.batch_size, shuffle=True, 
         num_workers=opt.train_workers, pin_memory=False, drop_last=False)
 # val_dataset = get_validation_data(opt.val_dir)
 # val_loader = DataLoader(dataset=val_dataset, batch_size=opt.batch_size, shuffle=False, 
 #         num_workers=opt.eval_workers, pin_memory=False, drop_last=False)
-test_dataset = get_test_data(opt.test_dir)  # Ensure opt.test_dir is defined in your options
+test_dataset = get_test_data(opt.root_dir)  # Ensure opt.test_dir is defined in your options
 test_loader = DataLoader(dataset=test_dataset, batch_size=opt.batch_size, shuffle=False, 
         num_workers=opt.eval_workers, pin_memory=False, drop_last=False)
 

@@ -48,6 +48,7 @@ class Options():
         parser.add_argument('--vit_share', action='store_true', default=False, help='share vit module')
         
         # args for training
+        parser.add_argument('--root_dir', type=str, default='/mnt/d/fyq/sinogram/2e9div_smooth', help='root dir')
         parser.add_argument('--train_ps', type=int, default=128, help='patch size of training sample')
         parser.add_argument('--val_ps', type=int, default=128, help='patch size of validation sample')
         parser.add_argument('--resume', action='store_true',default=False)
