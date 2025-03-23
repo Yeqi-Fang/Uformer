@@ -2,6 +2,8 @@ import torch
 import numpy as np
 import pickle
 import cv2
+from skimage.metrics import structural_similarity as ssim
+
 
 def is_numpy_file(filename):
     return any(filename.endswith(extension) for extension in [".npy"])
@@ -50,3 +52,23 @@ def batch_PSNR(img1, img2, average=True):
         PSNR.append(psnr)
     return sum(PSNR)/len(PSNR) if average else sum(PSNR)
 
+def mySSIM(tar_img, prd_img):
+    """Calculate SSIM for PyTorch tensors using scikit-image"""
+    # Convert tensors to numpy arrays
+    tar_img_np = tar_img.detach().cpu().numpy().transpose(1, 2, 0)
+    prd_img_np = prd_img.detach().cpu().numpy().transpose(1, 2, 0)
+    
+    # Ensure the values are in [0, 1]
+    tar_img_np = np.clip(tar_img_np, 0, 1)
+    prd_img_np = np.clip(prd_img_np, 0, 1)
+    
+    # Calculate SSIM
+    return ssim(tar_img_np, prd_img_np, channel_axis=2, data_range=1.0)
+
+def batch_SSIM(img1, img2, average=True):
+    """Calculate SSIM for a batch of images"""
+    SSIM = []
+    for im1, im2 in zip(img1, img2):
+        ssim = mySSIM(im1, im2)
+        SSIM.append(ssim)
+    return sum(SSIM)/len(SSIM) if average else sum(SSIM)

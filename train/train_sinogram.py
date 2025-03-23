@@ -1,5 +1,6 @@
 import os
 import sys
+from skimage.metrics import structural_similarity as ssim
 
 # add dir
 dir_name = os.path.dirname(os.path.abspath(__file__))
@@ -145,6 +146,8 @@ with torch.no_grad():
     model_restoration.eval()
     psnr_dataset = []
     psnr_model_init = []
+    ssim_dataset = []  # Added for SSIM
+    ssim_model_init = []  # Added for SSIM
     for ii, data_val in enumerate((test_loader), 0):
         target = data_val[0].cuda()
         input_ = data_val[1].cuda()
@@ -152,16 +155,25 @@ with torch.no_grad():
             restored = model_restoration(input_)
             restored = torch.clamp(restored,0,1)  
         psnr_dataset.append(utils.batch_PSNR(input_, target, False).item())
-        psnr_model_init.append(utils.batch_PSNR(restored, target, False).item())
+        psnr_model_init.append(utils.batch_PSNR(restored, target, False).item())        
+        ssim_dataset.append(utils.batch_SSIM(input_, target, False).item())  # Added for SSIM
+        ssim_model_init.append(utils.batch_SSIM(restored, target, False).item())  # Added for SSIM
+
     psnr_dataset = sum(psnr_dataset)/len_testset
     psnr_model_init = sum(psnr_model_init)/len_testset
+    ssim_dataset = sum(ssim_dataset)/len_testset  # Added for SSIM
+    ssim_model_init = sum(ssim_model_init)/len_testset  # Added for SSIM
     print('Input & GT (PSNR) -->%.4f dB'%(psnr_dataset), ', Model_init & GT (PSNR) -->%.4f dB'%(psnr_model_init))
+    print('Input & GT (SSIM) -->%.4f'%(ssim_dataset), ', Model_init & GT (SSIM) -->%.4f'%(ssim_model_init))  # Added for SSIM
 
 ######### train ###########
 print('===> Start Epoch {} End Epoch {}'.format(start_epoch,opt.nepoch))
 best_psnr = 0
 best_epoch = 0
 best_iter = 0
+best_ssim = 0  # Added for SSIM
+best_ssim_epoch = 0  # Added for SSIM
+best_ssim_iter = 0  # Added for SSIM
 eval_now = len(train_loader)//4
 print("\nEvaluation after every {} Iterations !!!\n".format(eval_now))
 
@@ -184,8 +196,7 @@ for epoch in range(start_epoch, opt.nepoch + 1):
         with torch.cuda.amp.autocast():
             restored = model_restoration(input_)
             loss = criterion(restored, target)
-        loss_scaler(
-                loss, optimizer,parameters=model_restoration.parameters())
+        loss_scaler(loss, optimizer,parameters=model_restoration.parameters())
         epoch_loss +=loss.item()
 
         #### Evaluation ####
@@ -193,6 +204,7 @@ for epoch in range(start_epoch, opt.nepoch + 1):
             with torch.no_grad():
                 model_restoration.eval()
                 psnr_val_rgb = []
+                ssim_val_rgb = []  # Added for SSIM
                 for ii, data_val in enumerate((test_loader), 0):
                     target = data_val[0].cuda()
                     input_ = data_val[1].cuda()
@@ -201,8 +213,10 @@ for epoch in range(start_epoch, opt.nepoch + 1):
                         restored = model_restoration(input_)
                     restored = torch.clamp(restored,0,1)  
                     psnr_val_rgb.append(utils.batch_PSNR(restored, target, False).item())
+                    ssim_val_rgb.append(utils.batch_SSIM(restored, target, False).item())  # Added for SSIM
 
                 psnr_val_rgb = sum(psnr_val_rgb)/len_testset
+                ssim_val_rgb = sum(ssim_val_rgb)/len_testset  # Added for SSIM
                 
                 if psnr_val_rgb > best_psnr:
                     best_psnr = psnr_val_rgb
@@ -213,10 +227,26 @@ for epoch in range(start_epoch, opt.nepoch + 1):
                                 'optimizer' : optimizer.state_dict()
                                 }, os.path.join(model_dir,"model_best.pth"))
 
+                # Add SSIM tracking
+                if ssim_val_rgb > best_ssim:  # Added for SSIM
+                    best_ssim = ssim_val_rgb  # Added for SSIM
+                    best_ssim_epoch = epoch  # Added for SSIM
+                    best_ssim_iter = i  # Added for SSIM
+                    torch.save({'epoch': epoch, 
+                                'state_dict': model_restoration.state_dict(),
+                                'optimizer' : optimizer.state_dict()
+                                }, os.path.join(model_dir,"model_best_ssim.pth"))  # Added for SSIM
+
+                
+                
                 print("[Ep %d it %d\t PSNR SIDD: %.4f\t] ----  [best_Ep_SIDD %d best_it_SIDD %d Best_PSNR_SIDD %.4f] " % (epoch, i, psnr_val_rgb,best_epoch,best_iter,best_psnr))
+                print("[Ep %d it %d\t SSIM SIDD: %.4f\t] ----  [best_Ep_SIDD %d best_it_SIDD %d Best_SSIM_SIDD %.4f] " % (epoch, i, ssim_val_rgb,best_ssim_epoch,best_ssim_iter,best_ssim))  # Added for SSIM
+
                 with open(logname,'a') as f:
                     f.write("[Ep %d it %d\t PSNR SIDD: %.4f\t] ----  [best_Ep_SIDD %d best_it_SIDD %d Best_PSNR_SIDD %.4f] " \
                         % (epoch, i, psnr_val_rgb,best_epoch,best_iter,best_psnr)+'\n')
+                    f.write("[Ep %d it %d\t SSIM SIDD: %.4f\t] ----  [best_Ep_SIDD %d best_it_SIDD %d Best_SSIM_SIDD %.4f] " \
+                        % (epoch, i, ssim_val_rgb,best_ssim_epoch,best_ssim_iter,best_ssim)+'\n')  # Added for SSIM
                 model_restoration.train()
                 torch.cuda.empty_cache()
     scheduler.step()
