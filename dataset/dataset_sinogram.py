@@ -67,7 +67,7 @@ class SinogramDataset(Dataset):
             complete = complete.repeat(3, 1, 1)
             
         # Resize to 256x256
-        resize_transform = transforms.Resize((256, 256), antialias=True)
+        resize_transform = transforms.Resize((256, 256))
         incomplete = resize_transform(incomplete)
         complete = resize_transform(complete)
 
