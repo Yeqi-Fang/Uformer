@@ -21,9 +21,9 @@ class SinogramDataset(Dataset):
         # Here we assume the folder itself distinguishes the mode.
         # You can customize this if your folder structure is different.
         if "train" in data_dir:
-            self.i_range = range(1, 171)  # For training
+            self.i_range = range(1, 3)  # For training
         else:
-            self.i_range = range(1, 37)   # For testing
+            self.i_range = range(1, 3)   # For testing
 
         # The j index range is assumed constant (e.g., 1 to 1764)
         self.j_range = range(1, 1765)
