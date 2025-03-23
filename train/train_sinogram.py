@@ -196,7 +196,7 @@ for epoch in range(start_epoch, opt.nepoch + 1):
                 for ii, data_val in enumerate((test_loader), 0):
                     target = data_val[0].cuda()
                     input_ = data_val[1].cuda()
-                    filenames = data_val[2]
+                    # filenames = data_val[2]
                     with torch.cuda.amp.autocast():
                         restored = model_restoration(input_)
                     restored = torch.clamp(restored,0,1)  
