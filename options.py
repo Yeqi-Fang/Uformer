@@ -15,7 +15,7 @@ class Options():
         parser.add_argument('--pretrain_weights',type=str, default='./log/Uformer_B/models/model_best.pth', help='path of pretrained_weights')
         parser.add_argument('--optimizer', type=str, default ='adamw', help='optimizer for training')
         parser.add_argument('--lr_initial', type=float, default=0.0002, help='initial learning rate')
-        parser.add_argument('--step_lr', type=int, default=50, help='weight decay')
+        parser.add_argument('--step_lr', type=int, default=5, help='weight decay')
         parser.add_argument('--weight_decay', type=float, default=0.02, help='weight decay')
         parser.add_argument('--gpu', type=str, default='6,7', help='GPUs')
         parser.add_argument('--arch', type=str, default ='Uformer_B',  help='archtechture')
